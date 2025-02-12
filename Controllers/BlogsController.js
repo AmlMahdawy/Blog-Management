@@ -1,22 +1,28 @@
-const getAllBlogs= async (req,res)=>{
+const blogsService = require('../services/blogs.service')
 
-}
-const getBlogById= async (req,res)=>{
-
-}
-const addBlog= async (req,res)=>{
-
-}
-const deleteBlog= async (req,res)=>{
-
-}
-const updateBlog=async (req,res)=>{
-
+const getAllBlogs = async (req, res, next) => {
+    const blogs = await blogsService.allBlogs(req, res, next)
+    res.status(200).send(blogs)
 }
 
-module.exports={
+const addBlog = async (req, res, next) => {
+
+    const blog = await blogsService.createBLog(req, res, next)
+    res.status(200).send(blog);
+}
+const deleteBlog = async (req, res, next) => {
+    const blog = await blogsService.deleteBlog(req, res, next)
+    res.status(200).send(blog);
+}
+
+const updateBlog = async (req, res, next) => {
+
+    const updatedBlog = await blogsService.updateBlog(req, res, next)
+    res.status(200).send(updatedBlog)
+}
+
+module.exports = {
     getAllBlogs,
-    getBlogById,
     addBlog,
     deleteBlog,
     updateBlog
