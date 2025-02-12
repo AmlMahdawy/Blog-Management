@@ -1,22 +1,28 @@
 const BlogModel = require('../Models/BlogModel');
 
-const createBLog = async (req, res, next) => {
-    const blog = new BlogModel({ ...req.body });
+const createBLog = async (blogData) => {
+    const blog = new BlogModel(blogData);
     await blog.save();
     return blog;
 }
-const updateBlog = async (req, res, next) => {
-    return await BlogModel.findOneAndUpdate({ userId: req.body.userId }, { ...req.body }, { new: true })
+const updateBlog = async (blogId, blogData) => {
+    return await BlogModel.findOneAndUpdate({ _id: blogId }, { ...blogData }, { new: true })
 }
-const deleteBlog = async (req, res, next) => {
-    return await BlogModel.findByIdAndDelete(req.params.id);
+const deleteBlog = async (blogId) => {
+    return await BlogModel.findByIdAndDelete(blogId);
 }
-const allBlogs = async (req, res, next) => {
+const allBlogs = async () => {
     return await await BlogModel.find({});
+}
+const blogById = async (blogId) => {
+    const blog = await BlogModel.findOne({ _id: blogId });
+    return blog;
+
 }
 module.exports = {
     createBLog,
     updateBlog,
     deleteBlog,
-    allBlogs
+    allBlogs,
+    blogById
 }
