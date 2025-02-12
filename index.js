@@ -1,13 +1,11 @@
-const express = require('express') 
+const express = require("express");
 const app = express();
-
-const BlogsRoutes=require('./Routes/BlogsRoutes')
-
-
 const PORT = process.env.PORT || 2025;
-app.use(express.urlencoded({extended:true}))
-app.use(express.json())
-app.use('/blogs',BlogsRoutes)
+const winston = require("winston");
 
+require('dotenv').config();
+require('./initialize/log')();
+require('./initialize/routes')(app, express);
+require('./initialize/db')();
 
-app.listen(PORT,()=>{})
+app.listen(PORT, () => { winston.info(`Server connected on port ${process.env.PORT}`) })
