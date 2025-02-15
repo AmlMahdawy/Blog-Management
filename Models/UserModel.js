@@ -6,6 +6,9 @@ const UsersSchema = new mongoose.Schema({
         required: true,
         minLength: 3,
         maxLength: 20,
+        set: v => v.trim(),
+        get: v => v.trim(),
+
 
     },
     mail: {

@@ -2,22 +2,29 @@ const mongoose = require("mongoose");
 const BlogsSchema = mongoose.Schema({
     title: {
         type: String,
-        // minlength: 5,
-        // maxlength: 20,
+        minlength: 5,
+        maxlength: 20,
         required: true,
+        set: v => v.toLowerCase().trim(),
+        get: v => v.toLowerCase().trim()
 
     },
     category: {
         type: String,
         minlength: 5,
-        // maxlength: 20,
+        maxlength: 20,
         required: true,
+        set: v => v.toLowerCase().trim(),
+        get: v => v.toLowerCase().trim()
 
     },
     content: {
         type: String,
-        // minlength: 30,
+        minlength: 15,
+        maxlength: 255,
         required: true,
+        set: v => v.toLowerCase().trim(),
+        get: v => v.toLowerCase().trim()
 
     },
     userId: {
@@ -28,9 +35,9 @@ const BlogsSchema = mongoose.Schema({
 
 function validateBlog(blog) {
     const schema = joi.object({
-        title: joi.string().min(3).max(25).required(),
-        content: joi.string().required().min(50).max(255).email(),
-        category: joi.string().min(8).max(30).required()
+        title: joi.string().min(5).max(20).required(),
+        content: joi.string().required().min(15).max(255).email(),
+        category: joi.string().min(5).max(20).required()
     })
     return schema.validate(user);
 }

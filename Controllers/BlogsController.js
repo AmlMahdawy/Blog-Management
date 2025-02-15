@@ -1,7 +1,7 @@
 const blogsService = require('../services/blogs.service')
 
 const getAllBlogs = async (req, res, next) => {
-    const blogs = await blogsService.allBlogs()
+    const blogs = await blogsService.allBlogs(req.params.filter)
     res.status(200).send(blogs)
 }
 

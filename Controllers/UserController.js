@@ -6,16 +6,17 @@ const joi = require('joi')
 
 
 const login = async (req, res, next) => {
-    const { error } = validateLoginData(req.body);
-    const user = await userModel.findOne({ mail: req.body.mail });
+    const { mail, password } = req.body
+    const { error } = validateLoginData({ mail, password });
+    const user = await userModel.findOne({ mail: mail });
     if (error | !user) return res.status(401).send("Invalid email or password.");
-    const passwordMatched = await bcrypt.compare(req.body.password, user.password);
+    const passwordMatched = await bcrypt.compare(password, user.password);
     if (!passwordMatched) return res.status(401).send("Invalid email or password.");
     const token = await jwt.sign({ id: user._id }, process.env.SECRET_KEY);
     res.status(200).header({ "x-auth-token": token }).send({ "loggedIn": true });
 
 }
-function validateLoginData(data) {
+const validateLoginData = (data) => {
     const schema = joi.object({
         mail: joi.string().required().email(),
         password: joi.string().min(8).max(30).required()
@@ -49,5 +50,7 @@ const signUp = async (req, res, next) => {
 
 module.exports = {
     login,
-    signUp
+    signUp,
+    validateLoginData
 }
+

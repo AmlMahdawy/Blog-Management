@@ -11,8 +11,8 @@ const updateBlog = async (blogId, blogData) => {
 const deleteBlog = async (blogId) => {
     return await BlogModel.findByIdAndDelete(blogId);
 }
-const allBlogs = async () => {
-    return await await BlogModel.find({});
+const allBlogs = async (filter) => {
+    return await await BlogModel.find(filter ? { category: filter } : {});
 }
 const blogById = async (blogId) => {
     const blog = await BlogModel.findOne({ _id: blogId });
