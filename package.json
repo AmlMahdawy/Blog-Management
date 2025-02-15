@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,10 @@
     "lodash": "^4.17.21",
     "mongoose": "^8.10.0",
     "nodemon": "^3.1.9",
+    "superset": "^2.0.1",
     "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
