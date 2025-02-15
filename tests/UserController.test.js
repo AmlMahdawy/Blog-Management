@@ -66,6 +66,7 @@ describe("login", () => {
     });
 });
 
+
 describe("signUp", () => {
     it("should return 400 for validation errors", async () => {
         const req = mockRequest({ body: { name: "", mail: "", password: "" } });
@@ -95,25 +96,24 @@ describe("signUp", () => {
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.send).toHaveBeenCalledWith("Email already registered.");
     });
-    // fit("should return 200 for success signup", async () => {
-    //     const req = mockRequest({
-    //         body: { name: "Test", mail: "test@example.com", password: "password" },
-    //     });
-    //     const res = mockResponse();
-    //     const mockToken = "mock-token";
+    fit("should return 200 for success signup", async () => {
+        const req = mockRequest({
+            body: { name: "Test", mail: "test@example.com", password: "password" },
+        });
+        const res = mockResponse();
+        const mockToken = "mock-token";
 
-    //     const validateUser = jest
-    //         .spyOn(userModel, "validateUser")
-    //         .mockReturnValue({ error: undefined });
-    //     const genSalt = jest.spyOn(bcrypt, 'genSalt').mockReturnValue('salt')
-    //     const hash = jest.spyOn(bcrypt, 'hash').mockReturnValue('hashed-password')
-    //     const sign = jest.fn(async () => mockToken);
-    //     // sign.mockResolvedValue(mockToken)
-    //     await userController.signUp(req, res);
+        const validateUser = jest
+            .spyOn(userModel, "validateUser")
+            .mockReturnValue({ error: undefined });
+        const genSalt = jest.spyOn(bcrypt, 'genSalt').mockReturnValue('salt')
+        const hash = jest.spyOn(bcrypt, 'hash').mockReturnValue('hashed-password')
+        const sign = jest.spyOn(jwt, 'sign').mockReturnValue(mockToken)
+        await userController.signUp(req, res);
 
-    //     expect(res.status).toHaveBeenCalledWith(200);
-    //     // expect(res.send).toHaveBeenCalledWith("Email already registered.");
-    // });
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.header).toHaveBeenCalledWith({ 'x-auth-token': mockToken })
+    });
 
 
 });

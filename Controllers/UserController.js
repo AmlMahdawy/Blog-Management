@@ -43,7 +43,7 @@ const signUp = async (req, res, next) => {
     const createdUser = await user.save();
 
     //generate token 
-    const token = await jwt.sign({ id: createdUser._id }, process.env.SECRET_KEY);
+    const token = await jwt.sign({ id: createdUser?._id }, process.env.SECRET_KEY);
 
     res.status(200).header({ "x-auth-token": token }).send(_.pick(user, ["name", "mail"]));
 }

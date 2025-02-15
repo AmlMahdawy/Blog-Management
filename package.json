@@ -28,7 +28,6 @@
     "lodash": "^4.17.21",
     "mongoose": "^8.10.0",
     "nodemon": "^3.1.9",
-    "superset": "^2.0.1",
     "winston": "^3.17.0"
   },
   "devDependencies": {
