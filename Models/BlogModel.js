@@ -33,12 +33,6 @@ const BlogsSchema = mongoose.Schema({
     }
 })
 
-function validateBlog(blog) {
-    const schema = joi.object({
-        title: joi.string().min(5).max(20).required(),
-        content: joi.string().required().min(15).max(255).email(),
-        category: joi.string().min(5).max(20).required()
-    })
-    return schema.validate(user);
-}
+
+
 module.exports = mongoose.model("Blog", BlogsSchema)
