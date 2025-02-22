@@ -8,7 +8,7 @@ module.exports = function (app, express) {
     app.use(express.urlencoded({ extended: true }));
     app.use(express.json());
     app.use('/blogs', authenticate, BlogsRoutes);
-    app.use("/user", UserRoutes);
+    app.use("/", UserRoutes);
     app.get(["/", "/*"], (req, res, next) => {
         res.status(404).send({ message: "Your requested page is not found" });
     });
