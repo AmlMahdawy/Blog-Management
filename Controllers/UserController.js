@@ -1,56 +1,52 @@
-const { validateUser, userModel } = require('../Models/UserModel');
+const { userModel } = require('../Models/UserModel');
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 const _ = require('lodash')
-const joi = require('joi')
+const { validateLoginData } = require('../Validators/inputValidators')
+const { validateUser } = require('../Validators/modelsValidators')
 
 
 const login = async (req, res, next) => {
     const { mail, password } = req.body
     const { error } = validateLoginData({ mail, password });
-    const user = await userModel.findOne({ mail: mail });
-    if (error | !user) return res.status(401).send("Invalid email or password.");
-    const passwordMatched = await bcrypt.compare(password, user.password);
-    if (!passwordMatched) return res.status(401).send("Invalid email or password.");
-    const token = await jwt.sign({ id: user._id }, process.env.SECRET_KEY);
-    res.status(200).header({ "x-auth-token": token }).send({ "loggedIn": true });
+    if (error) return res.status(401).send({ message: error.message });
 
-}
-const validateLoginData = (data) => {
-    const schema = joi.object({
-        mail: joi.string().required().email(),
-        password: joi.string().min(8).max(30).required()
-    })
-    return schema.validate(data);
+    const user = await userModel.findOne({ mail: mail });
+    if (!user) return res.status(401).send({ message: "Invalid email or password." });
+    const passwordMatched = await bcrypt.compare(password, user.password);
+    if (!passwordMatched) return res.status(401).send({ message: "Invalid email or password." });
+    const token = await jwt.sign({ id: user._id }, process.env.SECRET_KEY);
+    res.status(200).send({ "loggedIn": true, Bearer: token });
+
 }
 
 
 const signUp = async (req, res, next) => {
 
     const { error } = validateUser(req.body);
-    if (error) return res.status(400).send(error.message);
-
+    if (error) return res.status(400).send({ message: error.message });
     let { name, password, mail } = req.body;
 
     //check if email is already registered 
     const mailExist = await userModel.findOne({ mail: mail });
-    if (mailExist) return res.status(400).send("Email already registered.");
+    if (mailExist) return res.status(400).send({ message: "Email already registered." });
 
     //hash password
     const salt = await bcrypt.genSalt(10);
     password = await bcrypt.hash(password, salt);
-    const user = new userModel({ name, mail, password });
-    const createdUser = await user.save();
+    const user = await userModel.create({ name, mail, password });
+
+
 
     //generate token 
-    const token = await jwt.sign({ id: createdUser?._id }, process.env.SECRET_KEY);
+    const token = await jwt.sign({ id: user?._id }, process.env.SECRET_KEY);
 
-    res.status(200).header({ "x-auth-token": token }).send(_.pick(user, ["name", "mail"]));
+    res.status(200).send({ name: user?.name, mail: user?.mail, Bearer: token });
 }
 
 module.exports = {
     login,
     signUp,
-    validateLoginData
+
 }
 
