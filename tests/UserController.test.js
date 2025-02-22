@@ -1,123 +1,125 @@
 const userModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { mockRequest, mockResponse } = require("./testUtils");
+const request = require('supertest');
 const userController = require("../Controllers/UserController");
+const inputValidator = require('../Validators/inputValidators')
+const modelValidator = require('../Validators/modelsValidators')
 
+
+let server;
 jest.mock("../Models/UserModel");
 jest.mock("bcrypt");
 jest.mock("jsonwebtoken");
+jest.mock("../Validators/inputValidators");
+jest.mock("../Validators/modelsValidators");
+
+
+
 
 
 describe("login", () => {
-    it("should return 401 for invalid email", async () => {
-        const req = mockRequest({
-            body: { mail: "invalid@example.com", password: "password" },
-        });
-        const res = mockResponse();
-        const validateLoginData = jest.spyOn(userController, "validateLoginData");
-        validateLoginData.mockReturnValue({ error: "x" });
-        userModel.userModel.findOne.mockResolvedValue(null);
+    beforeEach(() => {
+        server = require('../index')
+        jest.clearAllMocks();
+    });
+    afterEach(async () => {
+        server.close();
 
-        await userController.login(req, res);
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.send).toHaveBeenCalledWith("Invalid email or password.");
+    });
+    it("should return 401 for invalid email", async () => {
+        const reqMockData = { mail: "invalid@example.com", password: "password" }
+        jest.spyOn(inputValidator, "validateLoginData").mockReturnValue({ error: { message: 'error happened' } });
+        const res = await request(server).post('/login').send(reqMockData)
+        expect(res.status).toBe(401);
+        expect(res.body).toStrictEqual({ message: "error happened" })
+
     });
 
     it("should return 401 for invalid password", async () => {
-        const req = mockRequest({
-            body: { mail: "test@example.com", password: "wrong-password" },
-        });
-        const res = mockResponse();
-        const mockUser = {
-            mail: "test@example.com",
-            password: "hashed-password",
-            _id: "mockId",
-        };
-        userModel.userModel.findOne.mockResolvedValue(mockUser);
-        bcrypt.compare.mockResolvedValue(false); // Password does not match
+        const reqMockData = { mail: "invalid@example.com", password: "password" }
+        const mockUser = { mail: "invalid@example.com", password: "hashed-password", _id: "mockId", };
+        const mockToken = "mock-token";
 
-        await userController.login(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.send).toHaveBeenCalledWith("Invalid email or password.");
+        jest.spyOn(userModel.userModel, "findOne").mockImplementation(() => Promise.resolve(mockUser));
+        jest.spyOn(jwt, 'sign').mockResolvedValue(mockToken)
+        jest.spyOn(bcrypt, 'compare').mockResolvedValue(false)
+        jest.spyOn(inputValidator, "validateLoginData").mockReturnValue({ error: undefined });
+        const res = await request(server).post('/login').send(reqMockData)
+        expect(res.status).toBe(401);
+        expect(res.body).toStrictEqual({ message: "Invalid email or password." });
     });
 
     it("should return 200 with token for valid credentials", async () => {
-        const req = mockRequest({
-            body: { mail: "test@example.com", password: "correct-password" },
-        });
-        const res = mockResponse();
+        const reqMockData = { mail: "invalid@example.com", password: "password" }
         const mockUser = {
-            mail: "test@example.com",
+            mail: "invalid@example.com",
             password: "hashed-password",
             _id: "mockId",
         };
         const mockToken = "mock-token";
-        userModel.userModel.findOne.mockResolvedValue(mockUser);
-        bcrypt.compare.mockResolvedValue(true); // Password matches
-        jwt.sign.mockResolvedValue(mockToken);
+        jest.spyOn(userModel.userModel, "findOne").mockImplementation(() => Promise.resolve(mockUser));
+        jest.spyOn(inputValidator, "validateLoginData").mockReturnValue({ error: undefined });
+        jest.spyOn(bcrypt, 'compare').mockResolvedValue(true)
+        jest.spyOn(jwt, 'sign').mockResolvedValue(mockToken)
 
-        await userController.login(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.header).toHaveBeenCalledWith({ "x-auth-token": mockToken });
-        expect(res.send).toHaveBeenCalledWith({ loggedIn: true });
+        const res = await request(server).post('/login').send(reqMockData)
+        expect(res.status).toBe(200);
+        expect(res.body).toStrictEqual({ loggedIn: true, Bearer: mockToken })
     });
 });
 
 
 describe("signUp", () => {
-    it("should return 400 for validation errors", async () => {
-        const req = mockRequest({ body: { name: "", mail: "", password: "" } });
-        const res = mockResponse();
-        const validateUser = jest
-            .spyOn(userModel, "validateUser")
-            .mockReturnValue({ error: "true" });
+    const testUser = {
+        name: 'name',
+        mail: 'mail1@gmail.com',
+        password: "password"
+    };
+    beforeEach(() => {
+        server = require('../index')
+        jest.clearAllMocks();
+    });
+    afterEach(async () => {
+        server.close();
 
-        await userController.signUp(req, res);
-        expect(validateUser).toHaveBeenCalledWith(req.body);
-        expect(res.status).toHaveBeenCalledWith(400);
+    });
+    it("should return 400 for validation errors", async () => {
+        jest.spyOn(modelValidator, "validateUser").mockReturnValue({ error: { message: "error happened" } });
+        const res = await request(server).post('/signup').send(testUser)
+        expect(res.status).toBe(400);
+        expect(res.body).toStrictEqual({ message: "error happened" })
     });
 
     it("should return 400 for duplicate email", async () => {
-        const req = mockRequest({
-            body: { name: "Test", mail: "test@example.com", password: "password" },
-        });
-        const res = mockResponse();
-        const validateUser = jest
-            .spyOn(userModel, "validateUser")
-            .mockReturnValue({ error: undefined });
-
-        userModel.userModel.findOne.mockResolvedValue({ mail: "test@example.com" });
-
-        await userController.signUp(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.send).toHaveBeenCalledWith("Email already registered.");
+        jest.spyOn(modelValidator, "validateUser").mockReturnValue({ error: undefined });
+        jest.spyOn(userModel.userModel, "findOne").mockImplementation(() => Promise.resolve(testUser.mail));
+        const res = await request(server).post('/signup').send(testUser)
+        expect(res.status).toBe(400);
+        expect(res.body).toStrictEqual({ message: "Email already registered." });
     });
-    fit("should return 200 for success signup", async () => {
-        const req = mockRequest({
-            body: { name: "Test", mail: "test@example.com", password: "password" },
-        });
-        const res = mockResponse();
+    it("should return 200 for success signup", async () => {
         const mockToken = "mock-token";
 
-        const validateUser = jest
-            .spyOn(userModel, "validateUser")
-            .mockReturnValue({ error: undefined });
-        const genSalt = jest.spyOn(bcrypt, 'genSalt').mockReturnValue('salt')
-        const hash = jest.spyOn(bcrypt, 'hash').mockReturnValue('hashed-password')
-        const sign = jest.spyOn(jwt, 'sign').mockReturnValue(mockToken)
-        await userController.signUp(req, res);
+        const mockCreatedUser = {
+            _id: 'mock-id',
+            name: testUser.name,
+            mail: testUser.mail,
+            password: 'hashed-password'
+        };
 
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.header).toHaveBeenCalledWith({ 'x-auth-token': mockToken })
+        jest.spyOn(modelValidator, "validateUser").mockReturnValue({ error: undefined });
+        jest.spyOn(bcrypt, 'genSalt').mockReturnValue('salt');
+        jest.spyOn(bcrypt, 'hash').mockReturnValue('hashed-password');
+        jest.spyOn(jwt, 'sign').mockReturnValue(mockToken);
+        jest.spyOn(userModel.userModel, 'create').mockReturnValue(mockCreatedUser)
+        jest.spyOn(userModel.userModel, "findOne").mockImplementation(() => Promise.resolve(null));
+        const res = await request(server).post('/signup').send(testUser)
+        expect(res.status).toBe(200);
+        expect(res.body).toStrictEqual({ name: 'name', mail: 'mail1@gmail.com', Bearer: mockToken })
     });
 
 
 });
-
-module.exports = { mockRequest, mockResponse };
 
 

@@ -8,4 +8,5 @@ require('./initialize/log')();
 require('./initialize/routes')(app, express);
 require('./initialize/db')();
 
-app.listen(PORT, () => { winston.info(`Server connected on port ${process.env.PORT}`) })
+const server = app.listen(PORT, () => { winston.info(`Server connected on port ${process.env.PORT}`) });
+module.exports = server
